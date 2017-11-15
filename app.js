@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/chat', {useMongoClient: true});
 require('./models/Thread')
+require('./models/Comment')
+require('./models/User')
 
 var routes = require('./routes/index');
 var users = require('./routes/users');

@@ -48,13 +48,13 @@ router.param('user', function(req, res, next, id) {
 router.get('/threads', function(req, res, next) {
   Thread.find(function(err, threads) {
     if (err) return next(err);
-    res.send(threads);
+    res.json(threads);
   });
 });
 
 // GET a specific thread
 router.get('/thread/:thread', function(req, res, next) {
-  res.send(req.thread);
+  res.json(req.thread);
 });
 
 // POST a new thread
@@ -64,26 +64,30 @@ router.post('/thread', function(req, res, next) {
   thread.save(function(err, thread) {
     if (err) return next(err);
     console.log(thread);
-    res.send(thread);
+    res.json(thread);
   });
 });
 
 // POST a new comment to a thread
 router.post('/thread/:thread', function(req, res, next) {
   var comment = new Comment();
+  console.log("body:")
+  console.log(req.body);
   comment.userId = req.body.userId;
   comment.message = req.body.message;
   comment.timestamp = req.body.timestamp;
   comment.threadId = req.body.threadId;
-  console.log(req.body);
+  console.log("comment:");
+  console.log(comment);
   req.thread.addComment(comment, function(err, thread) {
     if (err) return next(err);
-    console.log('comment added');
+    console.log('comment added to thread');
   });
   comment.save(function(err, comment) {
     if (err) return next(err);
     console.log('comment saved');
-    res.send(comment);
+    console.log(comment);
+    res.json(comment);
   });
 });
 
@@ -102,20 +106,21 @@ router.get('/user/:user', function(req, res, next) {
 
 
 router.post('/login', function(req, res, next) {
-  var user = User.find({ 'username': req.body.username }, function(err, user) {
+  User.find({ 'username': req.body.username }, function(err, user) {
     if (err) return next(err);
     if (user.length == 0) {
-      console.log('new user registered');
       var newUser = new User();
+      newUser.username = req.body.username;
+      newUser.password = req.body.password;
       newUser.save(function(err, user) {
         if (err) return next(err);
         console.log(user);
-        res.send(user);
+        res.json(user);
       });
     }
     else if (user[0].password == req.body.password) {
       console.log('user logged in');
-      res.send(user);
+      res.json(user[0]);
     } else {
       console.log('bad user credentials');
       res.sendStatus(401);

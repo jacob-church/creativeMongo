@@ -15,20 +15,18 @@
   <ui-view></ui-view>
 
 
-
-
   <script type="text/ng-template" id="/main.html">
     <div class="login" ng-hide="loggedIn(userId)">
       <form ng-submit="login()">
         <input type="text" ng-model="username" placeholder="Username"></input>
         <input type="text" ng-model="password" placeholder="Password"></input>
-        <input type="submit"></input>
+        <input type="submit" value="Login"></input>
       </form>
     </div>
     <h1>Chat Room</h1>
     <ul>
       <li ng-repeat="thread in threads">
-        <div class="thread" ng-click="gotoThread(thread._id))">
+        <div class="thread" ng-click="gotoThread(thread._id)">
           <h2>{{thread.topic}}</h2>
           <span class="replies"> Replies: {{thread.comments.length - 1}}</span>
           <br>
@@ -56,6 +54,13 @@
 
 
   <script type="text/ng-template" id="/thread.html">
+    <div class="login" ng-hide="loggedIn(userId)">
+      <form ng-submit="login()">
+        <input type="text" ng-model="username" placeholder="Username"></input>
+        <input type="text" ng-model="password" placeholder="Password"></input>
+        <input type="submit" value="Login"></input>
+      </form>
+    </div>
     <h1>{{topic}}</h1>
     <ul>
       <li ng-repeat="comment in comments">
@@ -76,13 +81,13 @@
       </li>
     </ul>
     <!-- form for new comment -->
-    <h3>Submit a Comment</h3>
-    <form ng-submit="addComment()">
-      <span class="lead">Name:</span><input type="text" ng-model="name" placeholder="Required"></input><br>
-      <span class="lead">Avatar Url:</span><input type="url" ng-model="url"></input><br>
-      <textarea ng-model="message" placeholder="Enter your comment...(Required)"></textarea><br>
-      <input class="button" type="submit" value="Reply"></input>
-    </form>
+    <div ng-show="loggedIn(userId)">
+      <h3>Submit a Comment</h3>
+      <form ng-submit="newComment()">
+        <textarea ng-model="message" placeholder="Enter your comment...(Required)"></textarea><br>
+        <input class="button" type="submit" value="Reply"></input>
+      </form>
+    </div>
   </script>
 
 
