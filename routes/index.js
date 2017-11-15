@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 var mongoose = require('mongoose');
+var User = mongoose.model('User');
 var Comment = mongoose.model('Comment');
 var Thread = mongoose.model('Thread');
-var User = mongoose.model('User');
 
 
 /* GET home page. */
