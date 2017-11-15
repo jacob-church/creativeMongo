@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Node Creative</title>
+  <title>Mongo Chatroom</title>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
   <script src="https://angular-ui.github.io/ui-router/release/angular-ui-router.js"></script>
   <link href="https://fonts.googleapis.com/css?family=Itim|Open+Sans|Raleway" rel="stylesheet">
@@ -15,11 +15,20 @@
   <ui-view></ui-view>
 
 
-  <script type="text/ng-template" id="/threads.html">
+
+
+  <script type="text/ng-template" id="/main.html">
+    <div class="login" ng-hide="loggedIn(userId)">
+      <form ng-submit="login()">
+        <input type="text" ng-model="username" placeholder="Username"></input>
+        <input type="text" ng-model="password" placeholder="Password"></input>
+        <input type="submit"></input>
+      </form>
+    </div>
     <h1>Chat Room</h1>
     <ul>
       <li ng-repeat="thread in threads">
-        <div class="thread" ng-click="enterThread(threads.indexOf(thread))">
+        <div class="thread" ng-click="gotoThread(thread._id))">
           <h2>{{thread.topic}}</h2>
           <span class="replies"> Replies: {{thread.comments.length - 1}}</span>
           <br>
@@ -30,17 +39,23 @@
       </li>
     </ul>
     <!-- form for new threads-->
-    <h3>Start a new Thread</h3>
-    <form ng-submit="addThread()">
-      <span class="lead">Topic:</span><input type="text" ng-model="topic" placeholder="Required"></input><br>
-      <span class="lead">Name:</span><input type="text" ng-model="name" placeholder="Required"></input><br>
-      <span class="lead">Avatar Url:</span><input type="url" ng-model="url"></input><br>
-      <textarea ng-model="message" placeholder="Enter your message...(Required)"></textarea><br>
-      <input class="button" type="submit" value="New Thread"></input>
-    </form>
+    <div ng-show="loggedIn(userId)">
+      <h3>Start a new Thread</h3>
+      <form ng-submit="newThread()">
+        <span class="lead">Topic:</span><input type="text" ng-model="topic" placeholder="Required"></input><br>
+        <textarea ng-model="message" placeholder="Enter your message...(Required)"></textarea><br>
+        <input class="button" type="submit" value="New Thread"></input>
+      </form>
+    </div>
   </script>
 
-  <script type="text/ng-template" id="/comments.html">
+
+
+
+
+
+
+  <script type="text/ng-template" id="/thread.html">
     <h1>{{topic}}</h1>
     <ul>
       <li ng-repeat="comment in comments">
@@ -67,8 +82,45 @@
       <span class="lead">Avatar Url:</span><input type="url" ng-model="url"></input><br>
       <textarea ng-model="message" placeholder="Enter your comment...(Required)"></textarea><br>
       <input class="button" type="submit" value="Reply"></input>
-
     </form>
+  </script>
+
+
+
+
+
+
+
+  <script type="text/ng-template" id="/user.html">
+    <div class="user-bio">
+      <img src="{{avatarUrl}}" alt="No Avatar"></img>
+      <div class="bio"></div>
+    </div>
+    <div class="user-info">
+      <div class="user-details">
+      </div>
+      <div class="user-comments">
+        <ul>
+          <li ng-repeat="comment in comments">
+            <div class="comment">
+              <div class="user">
+                <h2>{{username}}</h2>
+                <img src="{{avatarUrl}}" alt="No Image"></img><br>
+                Upvotes:  {{comment.upvotes}}
+              </div>
+              <div class="message">
+                <div class="content">{{comment.message}}</div>
+                <div class="timestamp">
+                  <div>{{comment.timestamp}}</div>
+                  <input type="submit" value="+" class="upvote" ng-click="upvote(comments.indexOf(comment))"></input>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
   </script>
 
 </body>

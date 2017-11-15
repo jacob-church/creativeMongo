@@ -1,150 +1,150 @@
+
+function loggedIn(userId) {
+  //return true;
+  return userId != -1;
+}
+
 angular.module('app', ['ui.router'])
   .config([
     '$stateProvider',
     '$urlRouterProvider',
     function($stateProvider, $urlRouterProvider) {
       $stateProvider
-        .state('threads', {
-          url: '/threads',
-          templateUrl: '/threads.html',
-          controller: 'threadCtrl'
+        .state('main', {
+          url: '/main',
+          templateUrl: '/main.html',
+          controller: 'mainCtrl'
         })
-        .state('comments', {
-          url: '/comments/{id}',
-          templateUrl: '/comments.html',
-          controller: 'commentCtrl'
+        .state('thread', {
+          url: '/thread/{id}',
+          templateUrl: '/thread.html',
+          controller: 'threadtCtrl'
+        })
+        .state('user', {
+          url: '/user/{id}',
+          templateUrl: '/user.html',
+          controller: 'userCtrl'
         });
-
-        $urlRouterProvider.otherwise('threads')
+        $urlRouterProvider.otherwise('main')
     }
   ])
-  .factory('chatData', [
+  .factory('login', function() {
+    return {
+      username: '',
+      password: ''
+    }
+  })
+  .controller('mainCtrl', [
+    '$scope',
+    '$state',
     '$http',
-    function($http) {
-      console.log(3.5)
-      var API_ROOT = 'chatData';
-      return {
-        get: function() {
-          return $http
-            .get(API_ROOT)
-            .then(function (resp) {
-              return resp.data
-          })
+    'login',
+    function($scope, $state, $http, login) {
+      $scope.threads = [];
+      $scope.userId = -1;
+
+      $scope.getThreads = function() {
+        return $http.get('/threads')
+          .then(function(data) {
+            angular.copy(data, $scope.threads);
+          });
+      }
+      $scope.getThreads();
+      $scope.loggedIn = loggedIn;
+
+      $scope.gotoThread = function(threadId) {
+        $state.go('thread', {id: threadId});
+      }
+
+      $scope.login = function() {
+        var formData = {
+          username: $scope.username,
+          password: $scope.password
         }
+        return $http.post('/login', formData)
+          .then(function(data) {
+            login.username = data.username;
+            login.password = data.password;
+            $scope.userId = data._id;
+            $scope.username = '';
+            $scope.password = '';
+          })
+      }
+
+      $scope.newThread = function() {
+        var thread = {
+          topic: $scope.topic
+        }
+        var comment = {
+          userId: $scope.userId,
+          message: $scope.message,
+          timestamp: Date()
+        }
+        return $http.post('/thread/', thread)
+          .then(function(data) {
+            $scope.threads = data;
+            comment.threadId = data._id;
+            console.log(data._id);
+            $http.post('/thread/' + data._id, comment)
+              .then(function(data) {
+                console.log('new thread posted');
+              });
+          });
       }
   }])
   .controller('threadCtrl', [
     '$scope',
-    '$state',
+    '$stateParams',
     '$http',
-    'chatData',
-    function($scope, $state, $http, chatData) {
-      $scope.threads = [];
+    'login',
+    function($scope, $stateParams, $http, login) {
+      $scope.comments = [];
+      $scope.topic = '';
 
-      //fetch current threads in the chat room
-      chatData.get()
-        .then( function(data) {
-          console.log(data);
-          $scope.threads = data;
-        });
-
-      $scope.enterThread = function(index) {
-        $state.go('comments', {id: index})
-      };
-
-      $scope.addThread = function() {
-        if ($scope.topic == '' || $scope.name == '' || $scope.message == '') return;
-        let formData = {
-          topic: $scope.topic, //grab topic from form
-          comments: [
-            {
-              name: $scope.name, //grab name from form
-              message: $scope.message, //grab message from form
-              timestamp: Date().substr(0,21),
-              avatarUrl: $scope.url, //grab url from form,
-              upvotes: 0
-            }
-          ]
-        };
-        console.log(formData);
-        let threadUrl = '/newThread';
-        $http({
-          url: threadUrl,
-          method: 'POST',
-          data: formData
-        })
-        .then(function(resp){
-          console.log('Message delivered!');
-          $scope.threads.push(formData);
-          $scope.topic = '';
-          $scope.name = '';
-          $scope.message = '';
-          $scope.url = '';
-        }, function(resp){
-          console.log('Message could not be delivered.')
-        })
+      $scope.getAll = function() {
+        return $http.get('/thread/' + $stateParams.id)
+          .then(function(data) {
+            angular.copy(data.topic, $scope.topic);
+            angular.copy(data.comments, $scope.comments);
+          });
       }
-  }])
-  .controller('commentCtrl', [
+      $scope.getAll();
+      $scope.loggedIn = loggedIn;
+
+      $scope.newComment = function() {
+
+      }
+
+      $scope.upvote = function(comment) {
+        return $http.put('/thread/' + $stateParams.id + '/' + comment._id + '/upvote')
+          .then(function(data) {
+            console.log('upvote worked');
+            comment.upvotes += 1;
+          });
+      }
+    }
+  ])
+  .controller('userCtrl', [
     '$scope',
     '$stateParams',
     '$http',
-    'chatData',
-    function($scope, $stateParams, $http, chatData) {
+    'login',
+    function($scope, $stateParams, $http, login) {
+      $scope.username = '';
       $scope.comments = [];
-      $scope.topic = '';
-      //fetch current threads in the chat room
-      chatData.get()
-        .then( function(data) {
-          console.log(data);
-          $scope.comments = data[$stateParams.id].comments;
-          $scope.topic = data[$stateParams.id].topic;
-        });
+      $scope.avatarUrl = '';
+      $scope.bio = '';
 
-      $scope.addComment = function() {
-          if ($scope.name == '' || $scope.message == '') return;
-          let index = parseInt($stateParams.id);
-          let formData = {
-            name: $scope.name,
-            message: $scope.message,
-            timestamp: Date().substr(0,21),
-            avatarUrl: $scope.url,
-            upvotes: 0
-          }
-          let threadUrl = '/newComment?i=' + index;
-          $http({
-            url: threadUrl,
-            method: 'POST',
-            data: formData
-          })
-          .then(function(resp) {
-            console.log('Message sent!')
-            $scope.comments.push(formData);
-            $scope.name = '';
-            $scope.message = '';
-            $scope.url = '';
-          }, function(resp) {
-            console.log('Message could not be delivered.')
+      // get these default values for a user
+      $scope.getAll = function() {
+        return $http.get('/user/' + $stateParams.id)
+          .then(function(data) {
+            angular.copy(data.username, $scope.username);
+            angular.copy(data.avatarUrl, $scope.avatarUrl);
+            angular.copy(data.bio, $scope.bio);
+            angular.copy(data.comments, $scope.comments);
           });
       }
-
-      $scope.upvote = function(index) {
-        let threadIndex = parseInt($stateParams.id);
-        let upvoteUrl = '/upvote';
-        let data = {
-          threadIndex: parseInt($stateParams.id),
-          commentIndex: index
-        }
-        $http({
-          url: upvoteUrl,
-          method: 'POST',
-          data: data
-        })
-        .then(function(resp) {
-          $scope.comments[index].upvotes++;
-        }, function(resp) {
-          console.log('Upvote failed');
-        })
-        comment.upvotes += 1;
-      }
-    }]);
+      $scope.getAll();
+    }
+  ])
