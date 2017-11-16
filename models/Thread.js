@@ -5,8 +5,6 @@ var ThreadSchema = new mongoose.Schema({
 });
 ThreadSchema.methods.addComment = function(comment, cb) {
   this.comments.push(comment);
-  console.log("thread comments:");
-  console.log(this.comments);
   this.save(cb);
 };
 mongoose.model('Thread', ThreadSchema);

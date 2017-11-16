@@ -65,8 +65,8 @@
     <ul>
       <li ng-repeat="comment in comments">
         <div class="comment">
-          <div class="user">
-            <h2>{{comment.name}}</h2>
+          <div class="user" ng-click="gotoUser(comment)">
+            <h2>{{comment.username}}</h2>
             <img src="{{comment.avatarUrl}}" alt="No Image"></img><br>
             Upvotes:  {{comment.upvotes}}
           </div>
@@ -74,7 +74,7 @@
             <div class="content">{{comment.message}}</div>
             <div class="timestamp">
               <div>{{comment.timestamp}}</div>
-              <input type="submit" value="+" class="upvote" ng-click="upvote(comments.indexOf(comment))"></input>
+              <input type="submit" value="+" class="upvote" ng-click="upvote(comment)"></input>
             </div>
           </div>
         </div>
@@ -98,8 +98,12 @@
 
   <script type="text/ng-template" id="/user.html">
     <div class="user-bio">
+      <h1>{{username}}</h1>
       <img src="{{avatarUrl}}" alt="No Avatar"></img>
-      <div class="bio"></div>
+      <div class="bio">
+        <h3>BIO</h3>
+        <div></div>
+      </div>
     </div>
     <div class="user-info">
       <div class="user-details">
@@ -117,7 +121,7 @@
                 <div class="content">{{comment.message}}</div>
                 <div class="timestamp">
                   <div>{{comment.timestamp}}</div>
-                  <input type="submit" value="+" class="upvote" ng-click="upvote(comments.indexOf(comment))"></input>
+                  <input type="submit" value="+" class="upvote" ng-click="upvote(comment)"></input>
                 </div>
               </div>
             </div>

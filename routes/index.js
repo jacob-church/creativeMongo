@@ -4,6 +4,9 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Comment = mongoose.model('Comment');
 var Thread = mongoose.model('Thread');
+// User.remove({},function(err){})
+// Comment.remove({},function(err){})
+// Thread.remove({},function(err){})
 
 
 /* GET home page. */
@@ -63,31 +66,39 @@ router.post('/thread', function(req, res, next) {
   thread.topic = req.body.topic;
   thread.save(function(err, thread) {
     if (err) return next(err);
-    console.log(thread);
     res.json(thread);
   });
 });
 
 // POST a new comment to a thread
 router.post('/thread/:thread', function(req, res, next) {
-  var comment = new Comment();
-  console.log("body:")
-  console.log(req.body);
-  comment.userId = req.body.userId;
-  comment.message = req.body.message;
-  comment.timestamp = req.body.timestamp;
-  comment.threadId = req.body.threadId;
-  console.log("comment:");
-  console.log(comment);
-  req.thread.addComment(comment, function(err, thread) {
-    if (err) return next(err);
-    console.log('comment added to thread');
+  var comment = new Comment({
+    userId:req.body.userId,
+    message:req.body.message,
+    timestamp:req.body.timestamp,
+    threadId:req.body.threadId
   });
+  console.log(comment);
   comment.save(function(err, comment) {
     if (err) return next(err);
     console.log('comment saved');
-    console.log(comment);
-    res.json(comment);
+  });
+  User.findById(req.body.userId).exec(function(err, user) {
+    if (err) return next(err);
+    if (!user) return next(new Error("User can't be found"));
+    var threadComment = {
+      _id: comment._id,
+      upvotes: comment.upvotes,
+      username: user.username,
+      message:req.body.message,
+      timestamp:req.body.timestamp,
+      avatarUrl: user.avatarUrl,
+      userId: user._id
+    }
+    req.thread.addComment(threadComment, function(err, thread) {
+      if (err) return next(err);
+      res.json(threadComment);
+    });
   });
 });
 
@@ -101,7 +112,7 @@ router.put('/thread/:thread/:comment/upvote', function(req, res, next) {
 
 // GET a user
 router.get('/user/:user', function(req, res, next) {
-  res.send(req.user);
+  res.json(req.user);
 });
 
 

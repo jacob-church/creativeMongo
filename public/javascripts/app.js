@@ -1,7 +1,7 @@
 
 function loggedIn(userId) {
   //return true;
-  return userId != -1;
+  return userId != undefined;
 }
 
 angular.module('app', ['ui.router'])
@@ -16,7 +16,7 @@ angular.module('app', ['ui.router'])
           controller: 'mainCtrl'
         })
         .state('thread', {
-          url: '/thread/{id}',
+          url: '/thread/{id}/{login}/{userId}',
           templateUrl: '/thread.html',
           controller: 'threadCtrl'
         })
@@ -41,7 +41,7 @@ angular.module('app', ['ui.router'])
     'login',
     function($scope, $state, $http, login) {
       $scope.threads = [];
-      $scope.userId = -1;
+      $scope.userId = undefined;
 
       $scope.getThreads = function() {
         return $http.get('/threads')
@@ -54,7 +54,12 @@ angular.module('app', ['ui.router'])
       $scope.loggedIn = loggedIn;
 
       $scope.gotoThread = function(threadId) {
-        $state.go('thread', {id: threadId});
+        console.log($scope.userId);
+        $state.go('thread', {
+          id: threadId,
+          login: login,
+          userId: $scope.userId
+        });
       }
 
       $scope.login = function() {
@@ -69,6 +74,8 @@ angular.module('app', ['ui.router'])
             $scope.userId = data.data._id;
             $scope.username = '';
             $scope.password = '';
+            console.log('logged in');
+            console.log($scope.userId);
           })
       }
 
@@ -84,11 +91,9 @@ angular.module('app', ['ui.router'])
         return $http.post('/thread', thread)
           .then(function(data) {
             $scope.threads.push(data.data)
-            console.log(data)
             comment.threadId = data.data._id;
             $http.post('/thread/' + data.data._id, comment)
               .then(function(data) {
-                console.log(data);
                 console.log('new thread posted');
               });
           });
@@ -97,18 +102,21 @@ angular.module('app', ['ui.router'])
   .controller('threadCtrl', [
     '$scope',
     '$stateParams',
+    '$state',
     '$http',
     'login',
-    function($scope, $stateParams, $http, login) {
+    function($scope, $stateParams, $state, $http, login) {
+      console.log($stateParams);
       $scope.comments = [];
       $scope.topic = '';
-      $scope.userId = -1;
+      $scope.userId = $stateParams.userId;
+      if ($scope.userId === '') $scope.userId = undefined;
+      login = $stateParams.login
 
       $scope.getAll = function() {
         return $http.get('/thread/' + $stateParams.id)
           .then(function(data) {
             data = data.data
-            console.log(data)
             $scope.topic = data.topic;
             angular.copy(data.comments, $scope.comments);
           });
@@ -131,6 +139,10 @@ angular.module('app', ['ui.router'])
           })
       }
 
+      $scope.gotoUser = function(comment) {
+        $state.go('user', {id: comment.userId});
+      }
+
       $scope.newComment = function() {
         message = {
             message: $scope.message,
@@ -138,11 +150,8 @@ angular.module('app', ['ui.router'])
             timestamp: Date(),
             threadId: $stateParams.id
         }
-        console.log("message")
-        console.log(message);
         return $http.post('/thread/' + $stateParams.id, message)
           .then(function(data) {
-            console.log('comment posted');
             $scope.comments.push(data.data);
           });
       }
@@ -162,6 +171,8 @@ angular.module('app', ['ui.router'])
     '$http',
     'login',
     function($scope, $stateParams, $http, login) {
+      console.log('user:');
+      console.log($stateParams);
       $scope.username = '';
       $scope.comments = [];
       $scope.avatarUrl = '';
@@ -171,10 +182,11 @@ angular.module('app', ['ui.router'])
       $scope.getAll = function() {
         return $http.get('/user/' + $stateParams.id)
           .then(function(data) {
-            angular.copy(data.username, $scope.username);
-            angular.copy(data.avatarUrl, $scope.avatarUrl);
-            angular.copy(data.bio, $scope.bio);
-            angular.copy(data.comments, $scope.comments);
+            console.log(data);
+            $scope.username = data.data.username;
+            $scope.avatarUrl = data.data.avatarUrl;
+            $scope.bio = data.data.bio;
+            angular.copy(data.data.comments, $scope.comments);
           });
       }
       $scope.getAll();

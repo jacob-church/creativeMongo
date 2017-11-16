@@ -4,7 +4,7 @@ var CommentSchema = new mongoose.Schema({
   threadId: String,
   message: String,
   upvotes: {type:Number, default: 0},
-  timestamp: Number
+  timestamp: String
 });
 CommentSchema.methods.upvote = function(cb) {
   this.upvotes += 1
